@@ -3,7 +3,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from accounts.forms import UserForm,UserProfileInfoForm
 from django.contrib.auth.models import User
 from django.urls import reverse
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 
@@ -83,5 +84,19 @@ def user_login(request):
                 return HttpResponse("Invalid login details given")
         else:
             return render(request, 'accounts/login.html', {})
+    except Exception as e:
+        return HttpResponse(e, status=500)
+
+
+@login_required
+def user_logout(request):
+    """
+    performs logout request
+    :param request:
+    :return: redirect user to url pattern name index in the url.py file
+    """
+    try:
+        logout(request)
+        return HttpResponseRedirect(reverse('index'))
     except Exception as e:
         return HttpResponse(e, status=500)
