@@ -1,9 +1,10 @@
 from django.shortcuts import render
-from django.http import HttpResponse
-
+from django.http import HttpResponse, HttpResponseRedirect
 from accounts.forms import UserForm,UserProfileInfoForm
-
 from django.contrib.auth.models import User
+from django.urls import reverse
+from django.contrib.auth import authenticate, login
+
 # Create your views here.
 
 
@@ -53,5 +54,34 @@ def signup(request):
                               {'user_form':user_form,
                                'profile_form':profile_form,
                                'registered':registered})
+    except Exception as e:
+        return HttpResponse(e, status=500)
+
+
+def user_login(request):
+    """
+    performs the users login request
+    :param request: includes the user attributes which contains email and password
+    :return: if the user's credentials are correct and the user is active returns a welcome message with user's email
+             elif user's account is inactive then returns an inactive account message
+             else error message is returned with an tried to login other's account
+    """
+    try:
+        if request.method == 'POST':
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+            user = authenticate(username=username, password=password)
+            if user:
+                if user.is_active:
+                    login(request,user)
+                    return HttpResponseRedirect(reverse('index'))
+                else:
+                    return HttpResponse("Your account was inactive.")
+            else:
+                print("Someone tried to login and failed.")
+                print("They used username: {} and password: {}".format(username,password))
+                return HttpResponse("Invalid login details given")
+        else:
+            return render(request, 'accounts/login.html', {})
     except Exception as e:
         return HttpResponse(e, status=500)
